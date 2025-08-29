@@ -6,10 +6,13 @@
     <title>Document</title>
 </head>
 <body>
-    <div style="background-color: red; color: black;">
-        <h1>hello from home</h1>
-
-    </div>
-    <script src="./index.js"></script>
+    <h1>hello</h1>
+    <script>
+        const data = fetch("http://localhost:8000/api/users")
+        data.then((data)=>{
+            console.log(data);
+            
+        })
+    </script>
 </body>
 </html>
