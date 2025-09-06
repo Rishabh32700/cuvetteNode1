@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require('fs')
+const fs = require("fs");
 const app = express();
 const users = require("./MOCK_DATA.json");
 
@@ -40,19 +40,33 @@ app
   .get((req, res) => {
     res.statusCode = 200;
     // db queries
+    console.log(req.headers);
+
+    res.setHeader("X-myName", "rishabh");
     return res.send(users);
   })
   .post((req, res) => {
     // some logic
-    console.log(req.body);
+
+    if (
+      !req.body ||
+      !req.body.first_name ||
+      !req.body.last_name ||
+      !req.body.email ||
+      !req.body.gender
+    ) {
+
+      return res.status(400).json({message:"invalid req something is missing"})
+    }
+
     users.push({ ...req.body, id: users.length + 1 });
-    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data)=>{
-      if(err){
+    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
+      if (err) {
         console.log(err);
-      }else{
-        return res.json({ status: "user created successfully" });
+      } else {
+        return res.status(202).json({ status: "user created successfully" });
       }
-    })
+    });
   });
 
 app
@@ -69,16 +83,18 @@ app
   .delete((req, res) => {
     // some logic
     const id = req.params.id;
-    
+
     const userIdx = users.findIndex((user) => user.id == id);
     const user = users.splice(userIdx, 1);
-    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data)=>{
-      if(err){
+    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
+      if (err) {
         console.log(err);
-      }else{
-        return res.json({ status: `user with id ${user.id} Deleted successfully` });
+      } else {
+        return res.json({
+          status: `user with id ${user.id} Deleted successfully`,
+        });
       }
-    })
+    });
   });
 
 app.listen(8000);
