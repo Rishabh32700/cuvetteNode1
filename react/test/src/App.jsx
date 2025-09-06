@@ -1,11 +1,8 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 import { useEffect } from 'react'
 
 function App() {
-  const [count, setCount] = useState(0)
   const [users, setUsers] = useState([])
   useEffect(()=>{
     fetch("http://localhost:8000/api/users").then((data)=>{
@@ -15,6 +12,14 @@ function App() {
         setUsers(data)
     })
   }, [])
+
+  function  getSpecificDetails (id) {
+    fetch(`http://localhost:8000/api/users/${id}`).then((data)=>{
+      return data.json()    
+    }).then((data)=>{
+        console.log(data);
+    })
+  }
 
   return (
     <>
@@ -26,7 +31,9 @@ function App() {
               <h1>{ele.id}</h1>
               <p>{ele.first_name}</p>
               <p>{ele.last_name}</p>
-
+              <button onClick={()=>{
+                getSpecificDetails(ele.id)
+              }} >get details</button>
             </div>
             </>
           )
