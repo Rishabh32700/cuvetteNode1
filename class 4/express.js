@@ -3,7 +3,7 @@ const cors = require("cors");
 const fs = require("fs");
 const app = express();
 const users = require("./MOCK_DATA.json");
-
+const mongoose = require("mongoose");
 app.use(express.urlencoded({ extended: false }));
 
 // const allowedOrigns = [
@@ -23,6 +23,35 @@ app.use(express.urlencoded({ extended: false }));
 
 // app.use(cors(corsOptions));
 
+mongoose
+  .connect("mongodb://127.0.0.1:27017/cuvetteNodeDB")
+  .then(() => {
+    console.log("db connected!!!");
+  })
+  .catch((err) => {
+    console.log("error===>", err);
+  });
+
+const userSchema = new mongoose.Schema({
+  first_name: {
+    type: String,
+    required: true,
+  },
+  last_name: {
+    type: String,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  gender: {
+    type: String,
+  },
+});
+
+const UserModel = mongoose.model("user", userSchema);
+
 app.use(cors());
 // app.use(cors({ origin: '*' }));
 
@@ -37,37 +66,44 @@ const basePath = "/api/users";
 
 app
   .route(basePath)
-  .get((req, res) => {
-    res.statusCode = 200;
+  .get( async (req, res) => {
+    
+    const allUsers = await UserModel.find()
     // db queries
-    console.log(req.headers);
 
     res.setHeader("X-myName", "rishabh");
-    return res.send(users);
+    return res.send(allUsers);
   })
-  .post((req, res) => {
+  .post(async (req, res) => {
     // some logic
-
     if (
       !req.body ||
       !req.body.first_name ||
-      !req.body.last_name ||
       !req.body.email ||
       !req.body.gender
     ) {
-
-      return res.status(400).json({message:"invalid req something is missing"})
+      return res
+        .status(400)
+        .json({ message: "invalid req something is missing" });
     }
 
-    users.push({ ...req.body, id: users.length + 1 });
-    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
-      if (err) {
-        console.log(err);
-      } else {
-        return res.status(202).json({ status: "user created successfully" });
-      }
-    });
+    try{
+      const result =  await UserModel.create({
+        first_name: req.body.first_name,
+        last_name : req.body.last_name ? req.body.last_name : null ,
+        email: req.body.email,
+        gender: req.body.gender
+      })
+      console.log(result);
+      
+      return res.status(200).json({msg:"Created Successfully !!!"});
+
+    }catch{
+      return res.status(400).json({msg:"somethg is missing"});
+    }
+
   });
+
 
 app
   .route(`${basePath}/:id`)
@@ -80,21 +116,13 @@ app
     // some logic
     return res.json({ status: "failed" });
   })
-  .delete((req, res) => {
-    // some logic
-    const id = req.params.id;
+  .delete(async (req, res) => {
 
-    const userIdx = users.findIndex((user) => user.id == id);
-    const user = users.splice(userIdx, 1);
-    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
-      if (err) {
-        console.log(err);
-      } else {
-        return res.json({
-          status: `user with id ${user.id} Deleted successfully`,
-        });
-      }
-    });
+    const id = req.params.id;
+    const user = await UserModel.findByIdAndDelete(id)
+
+    return res.status(200).json({ status: "Deleted !!!" });
+
   });
 
 app.listen(8000);
